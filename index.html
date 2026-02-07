@@ -1,14 +1,54 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pronunciation Coach</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+    <div class="container">
+        <header>
+            <h1>Pronunciation Coach</h1>
+            <p>Refine your accent. Speak with confidence.</p>
+        </header>
+
+        <div class="coach-container">
+            <div class="language-selector">
+                <button id="lang-en" class="active"><i class="fas fa-globe-americas"></i> English</button>
+                <button id="lang-ko"><i class="fas fa-globe-asia"></i> Korean</button>
+            </div>
+
+            <div class="sentence-box">
+                <p id="sentence-to-read">Click "New Sentence" to begin your practice.</p>
+            </div>
+
+            <button id="new-sentence-btn"><i class="fas fa-sync-alt"></i> New Sentence</button>
+
+            <div class="mic-container">
+                <button id="record-btn">
+                    <i id="mic-icon" class="fas fa-microphone"></i>
+                </button>
+                <p id="status-message">Click the mic to start recording</p>
+            </div>
+
+            <div id="result-container" class="hidden">
+                <h2>Your Result</h2>
+                <div class="score-circle">
+                    <span id="accuracy-score">0%</span>
+                </div>
+                <div class="result-text">
+                    <p><strong>You said:</strong> <span id="user-transcript"></span></p>
+                    <p><strong>Original:</strong> <span id="original-sentence"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="main.js"></script>
 </body>
 </html>
