@@ -37,7 +37,7 @@
                 <p id="status-message">Click the mic to start recording</p>
             </div>
 
-            <div id="result-container" class="hidden">
+            <div id="accuracy-container" class="hidden">
                 <h2>Your Result</h2>
                 <div class="score-circle">
                     <span id="accuracy-score">0%</span>
@@ -45,6 +45,9 @@
                 <div class="result-text">
                     <p><strong>You said:</strong> <span id="user-transcript"></span></p>
                     <p><strong>Original:</strong> <span id="original-sentence"></span></p>
+                </div>
+                <div id="accent-result" class="hidden">
+                    <p><strong>Detected Accent:</strong> <span id="accent-type"></span></p>
                 </div>
             </div>
         </div>
