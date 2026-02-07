@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     const sentences = {
         en: [
@@ -324,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isRecording = false;
     let englishRecognitionResults = { us: null, uk: null };
     let activeRecognitions = [];
+    let englishRecognitionTimeoutId = null; // For managing timeout
 
     // Function to set status message with optional error styling
     function setStatusMessage(message, isError = false) {
@@ -360,8 +360,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const confidence = event.results[0][0].confidence;
             englishRecognitionResults[type] = { transcript, confidence };
             
-            // Only proceed if both US and UK results are received
+            // If both results are received, clear timeout and process immediately
             if (englishRecognitionResults.us && englishRecognitionResults.uk) {
+                clearTimeout(englishRecognitionTimeoutId);
                 processEnglishResults();
             }
         };
@@ -369,16 +370,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const englishRecognitionOnError = (event) => {
             console.error(`English Recognition Error (${event.error}):`, event);
             // If one fails, the other might still succeed, but we need to manage state
-            stopAllRecognitions();
-            handleRecognitionError(event);
+            // If an error occurs, process what we have after a short delay
+            if (englishRecognitionTimeoutId) {
+                clearTimeout(englishRecognitionTimeoutId);
+            }
+            // Trigger processing after a brief moment to allow the other recognizer to potentially finish
+            setTimeout(() => {
+                processEnglishResults();
+            }, 500); // Give a small grace period
+            handleRecognitionError(event); // Also log and show generic error
         };
 
         const englishRecognitionOnEnd = () => {
-            // One recognition ends, but we wait for both results
-            // This handler ensures the recording state is reset only after all necessary processing
-            // The processEnglishResults will handle final UI updates
+            // One recognition ends, but we wait for both results or timeout
             console.log("An English recognition instance ended.");
-            // We don't remove 'recording' class here, it's done by processEnglishResults
         };
         
         recognitionUS.onresult = (event) => englishRecognitionOnResult(event, 'us');
@@ -402,6 +407,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function stopAllRecognitions() {
+        // Clear any pending timeout for English recognition
+        if (englishRecognitionTimeoutId) {
+            clearTimeout(englishRecognitionTimeoutId);
+            englishRecognitionTimeoutId = null;
+        }
+
         if (recognitionKO && activeRecognitions.includes(recognitionKO)) {
             recognitionKO.stop();
         }
@@ -425,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleRecognitionEnd() {
-        // This is for single recognition (KO), English handled by processEnglishResults
+        // This is primarily for single recognition (KO), English handled by processEnglishResults
         if (!isRecording) return; // Prevent multiple calls to end
         stopAllRecognitions();
         setStatusMessage('Click the mic to start recording');
@@ -449,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function processEnglishResults() {
+        if (!isRecording) return; // Only process if recording was active
         stopAllRecognitions(); // Stop any remaining active recognitions
 
         const originalSentence = sentenceToReadElem.textContent;
@@ -474,16 +486,21 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (usResult) {
             bestTranscript = usResult.transcript;
             bestConfidence = usResult.confidence;
-            detectedAccent = 'American English (UK result missing)';
+            detectedAccent = 'American English (UK result missing or failed)';
         } else if (ukResult) {
             bestTranscript = ukResult.transcript;
             bestConfidence = ukResult.confidence;
-            detectedAccent = 'British English (US result missing)';
+            detectedAccent = 'British English (US result missing or failed)';
+        } else {
+            // Both failed or no speech detected
+            bestTranscript = 'No speech detected or recognition failed.';
+            bestConfidence = 0;
+            detectedAccent = 'No English speech detected';
         }
 
         mainAccuracy = Math.round(bestConfidence * 100);
 
-        userTranscriptElem.textContent = bestTranscript || 'No speech detected.';
+        userTranscriptElem.textContent = bestTranscript;
         originalSentenceElem.textContent = originalSentence;
         accuracyScoreElem.textContent = `${mainAccuracy}%`;
         scoreCircle.style.background = `conic-gradient(from 0deg, var(--accent-color-green) ${mainAccuracy}%, var(--surface-light) ${mainAccuracy}%)`;
@@ -549,16 +566,13 @@ document.addEventListener('DOMContentLoaded', () => {
         langKoBtn.classList.remove('active');
         if (lang === 'en') {
             langEnBtn.classList.add('active');
-            // recognition.lang is implicitly handled by US/UK instances
         } else {
             langKoBtn.classList.add('active');
-            // recognitionKO.lang is set at init
         }
         updateSentence();
     }
     
     // Initial language setup.
-    // If recognition is available, ensure all instances have their lang set correctly.
     if (SpeechRecognition) {
         if (currentLanguage === 'en') {
             langEnBtn.classList.add('active');
@@ -588,8 +602,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isRecording) {
             stopAllRecognitions();
             setStatusMessage('Recording stopped.');
-            recordBtn.classList.remove('recording');
-            isRecording = false;
         } else {
             handleRecognitionStart();
             englishRecognitionResults = { us: null, uk: null }; // Reset results for English
@@ -600,6 +612,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     activeRecognitions.push(recognitionUS);
                     recognitionUK.start();
                     activeRecognitions.push(recognitionUK);
+
+                    // Set a timeout to process results even if one recognizer is slow
+                    englishRecognitionTimeoutId = setTimeout(() => {
+                        console.warn("English recognition timeout reached. Processing partial results.");
+                        processEnglishResults();
+                    }, 5000); // 5 seconds timeout
+                    
                 } catch (e) {
                     if (e.message.includes('already started')) {
                         setStatusMessage('Recognition already active. Please wait or try again.', true);
