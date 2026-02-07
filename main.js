@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
     const sentences = {
         en: [
@@ -503,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userTranscriptElem.textContent = bestTranscript;
         originalSentenceElem.textContent = originalSentence;
         accuracyScoreElem.textContent = `${mainAccuracy}%`;
-        scoreCircle.style.background = `conic-gradient(from 0deg, var(--accent-color-green) ${mainAccuracy}%, var(--surface-light) ${mainAccuracy}%)`;
+        scoreCircle.style.setProperty('--score', mainAccuracy + '%');
 
         accentTypeElem.textContent = detectedAccent;
         accentResultElem.classList.remove('hidden');
@@ -528,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userTranscriptElem.textContent = transcript;
         originalSentenceElem.textContent = originalSentence;
         accuracyScoreElem.textContent = `${accuracy}%`;
-        scoreCircle.style.background = `conic-gradient(from 0deg, var(--accent-color-green) ${accuracy}%, var(--surface-light) ${accuracy}%)`;
+        scoreCircle.style.setProperty('--score', accuracy + '%');
 
         // Hide accent result for Korean
         accentResultElem.classList.add('hidden');
@@ -553,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userTranscriptElem.textContent = '';
         originalSentenceElem.textContent = '';
         accuracyScoreElem.textContent = '0%';
-        scoreCircle.style.background = `conic-gradient(from 0deg, var(--accent-color-green), var(--accent-color-green) 0%, var(--surface-light) 0%)`;
+        scoreCircle.style.setProperty('--score', '0%');
         setStatusMessage('Click the mic to start recording');
     }
 
